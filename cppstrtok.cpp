@@ -30,7 +30,7 @@ static void chomp (char* string, char delim)
 
 
 // Run cpp against the lines of the file.
-static void cpplines (FILE *outfile, FILE* pipe, char* filename)
+static void cpplines (FILE* pipe, char* filename)
 {
     int linenr = 1;
     char inputname[LINESIZE];
@@ -56,15 +56,15 @@ static void cpplines (FILE *outfile, FILE* pipe, char* filename)
             if (token == NULL) break;
         //    printf ("token %d.%d: [%s]\n",
           //          linenr, tokenct, token);
-            const string* str = intern_stringset(token);
-            fprintf (outfile, "intern (\"%s\") returned %p->\"%s\"\n",
-                                        token, str->c_str(), str->c_str());
+            intern_stringset(token);
+            //DEBUG("intern (\"%s\") returned %p->\"%s\"\n",
+              //                          token, str->c_str(), str->c_str());
         }
         ++linenr;
     }
 }
 
-int oc_cpp_parse(FILE *out, vector<string> *defines, char *filename)
+int oc_cpp_parse(vector<string> *defines, char *filename)
 {
     string arguments = "";
     for(auto it = defines->begin(); it != defines->end(); ++it) {
@@ -76,7 +76,7 @@ int oc_cpp_parse(FILE *out, vector<string> *defines, char *filename)
     if (pipe == NULL) {
         errprintf ("command %s failed!\n", command.c_str());
     } else {
-        cpplines (out, pipe, filename);
+        cpplines (pipe, filename);
         return pclose (pipe);
     }
     return -1;

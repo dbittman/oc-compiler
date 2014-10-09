@@ -75,13 +75,14 @@ int main (int argc, char** argv) {
     }
     fclose(infile);
 
+    if(oc_cpp_parse(&defines, infilename)) {
+        errprintf("CPP call returned fail status, exiting.\n");
+        return 1;
+    }
+    
     outfile = fopen(outfilename.c_str(), "w");
     if(!outfile) {
         perror("failed to open output file");
-        return 1;
-    }
-    if(oc_cpp_parse(outfile, &defines, infilename)) {
-        errprintf("CPP call returned fail status, exiting.\n");
         return 1;
     }
     dump_stringset(outfile);

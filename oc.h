@@ -14,7 +14,7 @@ extern char *progname;
         fprintf(stderr, str); \
     } while(0);
 
-void oc_cpp_parse(FILE *outfile, std::vector<string> *, char*);
+int oc_cpp_parse(FILE *outfile, std::vector<string> *, char*);
 
 #endif
 

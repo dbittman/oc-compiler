@@ -60,16 +60,30 @@ int main (int argc, char** argv) {
     char *infilename  = argv[optind];
     string outfilename = string(infilename);
     size_t found = outfilename.find_last_of(".");
-    if(found != string::npos) {
-        outfilename = outfilename.substr(0, found);
+    if(found == string::npos || outfilename.substr(found) != ".oc") {
+        errprintf("file '%s' has a non-allowed file extension!\n", infilename);
+        return 1;
     }
+    outfilename = outfilename.substr(0, found);
     outfilename += ".str";
+
+    /* test for access to input file. Yeah, we could call access(), but I'm lazy. */
+    FILE *infile = fopen(infilename, "r");
+    if(!infile) {
+        perror("could not open input file");
+        return 1;
+    }
+    fclose(infile);
+
     outfile = fopen(outfilename.c_str(), "w");
     if(!outfile) {
         perror("failed to open output file");
         return 1;
     }
-    oc_cpp_parse(outfile, &defines, infilename);
+    if(oc_cpp_parse(outfile, &defines, infilename)) {
+        errprintf("CPP call returned fail status, exiting.\n");
+        return 1;
+    }
     dump_stringset(outfile);
     return 0;
 }

@@ -64,7 +64,7 @@ static void cpplines (FILE *outfile, FILE* pipe, char* filename)
     }
 }
 
-void oc_cpp_parse(FILE *out, vector<string> *defines, char *filename)
+int oc_cpp_parse(FILE *out, vector<string> *defines, char *filename)
 {
     string arguments = "";
     for(auto it = defines->begin(); it != defines->end(); ++it) {
@@ -77,7 +77,8 @@ void oc_cpp_parse(FILE *out, vector<string> *defines, char *filename)
         errprintf ("command %s failed!\n", command.c_str());
     } else {
         cpplines (out, pipe, filename);
-        pclose (pipe);
+        return pclose (pipe);
     }
+    return -1;
 }
 

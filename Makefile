@@ -16,3 +16,7 @@ spotless : clean
 clean :
 	-rm stringset.o main.o
 
+ci:
+
+deps:
+

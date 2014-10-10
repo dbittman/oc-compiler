@@ -20,7 +20,8 @@ int debug_yylex = 0, debug_yyparse = 0;
 
 void usage()
 {
-    fprintf(stderr, "usage: %s [-D <define>] [-yl] <source file>\n", progname);
+    fprintf(stderr, "usage: %s [-D <define>] [-yl] <source file>\n",
+            progname);
     exit(0);
 }
 
@@ -61,13 +62,15 @@ int main (int argc, char** argv) {
     string outfilename = string(infilename);
     size_t found = outfilename.find_last_of(".");
     if(found == string::npos || outfilename.substr(found) != ".oc") {
-        errprintf("file '%s' has a non-allowed file extension!\n", infilename);
+        errprintf("file '%s' has a non-allowed file extension!\n",
+                infilename);
         return 1;
     }
     outfilename = outfilename.substr(0, found);
     outfilename += ".str";
 
-    /* test for access to input file. Yeah, we could call access(), but I'm lazy. */
+    /* test for access to input file.
+     * Yeah, we could call access(), but I'm lazy. */
     FILE *infile = fopen(infilename, "r");
     if(!infile) {
         perror("could not open input file");

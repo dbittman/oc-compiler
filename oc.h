@@ -5,16 +5,16 @@
 
 #include <stdio.h>
 
-
 extern char *progname;
 
-#define errprintf(str...) \
+#define oc_errprintf(str...) \
     do { \
         fprintf(stderr, "%s: ", progname); \
         fprintf(stderr, str); \
     } while(0);
 
-int oc_cpp_parse(std::vector<string> *, char*);
+FILE *oc_cpp_getfile(vector<string> *defines, char *filename);
+void scanner_scan(FILE *outf);
 
 #endif
 

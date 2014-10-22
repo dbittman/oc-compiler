@@ -1,8 +1,9 @@
-/* main program file for oc */
+/* main program file for oc.
+ * Daniel Bittman (dbittman)
+ */
 #include <string>
 #include <vector>
 using namespace std;
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,12 +12,20 @@ using namespace std;
 
 #include "stringset.h"
 #include "oc.h"
+#include "lyutils.h"
+#include "auxlib.h"
 
 char *progname = NULL;
 
+/* this contains a list of all flags supplied by -D. */
 vector<string> defines;
+/* other debugging flags */
+int debug_yyparse = 0;
 
-int debug_yylex = 0, debug_yyparse = 0;
+extern char *yytext;
+extern FILE *yyin;
+extern int yylex();
+extern int yy_flex_debug;
 
 void usage()
 {
@@ -29,8 +38,11 @@ int main (int argc, char** argv) {
     FILE *outfile = NULL;
     /* basic init stuff for auxlib */
     progname = argv[0];
+    set_execname(progname);
+    yy_flex_debug = 0;
 
     int c;
+    /* holy... */
     while((c = getopt(argc, argv, "D:h@ly")) != -1) {
         switch(c) {
             case 'D':
@@ -39,9 +51,10 @@ int main (int argc, char** argv) {
             case 'h':
                 usage();
                 break;
+            /* '@' is implementation specific, so this is valid */
             case '@':break;
             case 'l':
-                debug_yylex = 1;
+                yy_flex_debug = 1;
                 break;
             case 'y':
                 debug_yyparse = 1;
@@ -49,25 +62,31 @@ int main (int argc, char** argv) {
         }
     }
 
+    /* check for the right number of remaining options */
     if(optind == argc) {
-        errprintf("no program file specified\n");
+        oc_errprintf("no program file specified\n");
         return 1;
     }
     if(optind + 1 < argc) {
-        errprintf("multiple program files is not supported\n");
+        oc_errprintf("multiple program files is not supported\n");
         return 1;
     }
     
+    /* generate output file name */
     char *infilename  = argv[optind];
     string outfilename = string(infilename);
+    /* check if we even have an extension, and if so, if it's correct */
     size_t found = outfilename.find_last_of(".");
     if(found == string::npos || outfilename.substr(found) != ".oc") {
-        errprintf("file '%s' has a non-allowed file extension!\n",
+        oc_errprintf("file '%s' has a non-allowed file extension!\n",
                 infilename);
         return 1;
     }
+    /* append the new extension */
     outfilename = outfilename.substr(0, found);
     outfilename += ".str";
+
+    outfilename = string(basename(outfilename.c_str()));
 
     /* test for access to input file.
      * Yeah, we could call access(), but I'm lazy. */
@@ -76,13 +95,19 @@ int main (int argc, char** argv) {
         perror("could not open input file");
         return 1;
     }
+    /* we don't directly read from infile, so close the handle */
     fclose(infile);
 
-    if(oc_cpp_parse(&defines, infilename)) {
-        errprintf("CPP call returned fail status, exiting.\n");
+    /* call the "scanner" */
+    FILE *cpp_pipe = oc_cpp_getfile(&defines, infilename);
+    if(!cpp_pipe)
         return 1;
-    }
     
+    yyin = cpp_pipe;
+    
+    scanner_scan(stdout);
+
+    /* and write out the stringset to the output file */
     outfile = fopen(outfilename.c_str(), "w");
     if(!outfile) {
         perror("failed to open output file");

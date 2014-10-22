@@ -74,19 +74,19 @@ int main (int argc, char** argv) {
     
     /* generate output file name */
     char *infilename  = argv[optind];
-    string outfilename = string(infilename);
+    string filename = string(infilename);
     /* check if we even have an extension, and if so, if it's correct */
-    size_t found = outfilename.find_last_of(".");
-    if(found == string::npos || outfilename.substr(found) != ".oc") {
+    size_t found = filename.find_last_of(".");
+    if(found == string::npos || filename.substr(found) != ".oc") {
         oc_errprintf("file '%s' has a non-allowed file extension!\n",
                 infilename);
         return 1;
     }
     /* append the new extension */
-    outfilename = outfilename.substr(0, found);
-    outfilename += ".str";
-
-    outfilename = string(basename(outfilename.c_str()));
+    filename = filename.substr(0, found);
+    filename = string(basename(filename.c_str()));
+    string stroutfile = filename + ".str";
+    string tokoutfile = filename + ".tok";
 
     /* test for access to input file.
      * Yeah, we could call access(), but I'm lazy. */
@@ -104,16 +104,22 @@ int main (int argc, char** argv) {
         return 1;
     
     yyin = cpp_pipe;
-    
-    scanner_scan(stdout);
+    outfile = fopen(tokoutfile.c_str(), "w");
+    if(!outfile) {
+        perror("failed to open output .tok file");
+        return 1;
+    }
+    scanner_scan(outfile);
+    fclose(outfile);
 
     /* and write out the stringset to the output file */
-    outfile = fopen(outfilename.c_str(), "w");
+    outfile = fopen(stroutfile.c_str(), "w");
     if(!outfile) {
         perror("failed to open output file");
         return 1;
     }
     dump_stringset(outfile);
+    fclose(outfile);
     return 0;
 }
 

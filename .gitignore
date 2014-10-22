@@ -8,4 +8,5 @@ yyparse.cpp
 yyparse.h
 *.output
 *.oh
+*.tok
 

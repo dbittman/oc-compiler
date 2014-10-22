@@ -11,6 +11,7 @@ using namespace std;
 
 #include "lyutils.h"
 #include "auxlib.h"
+#include "stringset.h"
 
 astree* yyparse_astree = NULL;
 int scan_linenr = 1;
@@ -111,6 +112,7 @@ void scanner_scan(FILE *outf)
         fprintf(outf, "%3ld %3d.%3.3d %-16s (%s)\n",
                 &included_filenames.back() - &included_filenames[0],
                 scan_linenr, scan_offset - yyleng, get_yytname(symbol), yytext);
+        intern_stringset(yytext);
     }
 }
 

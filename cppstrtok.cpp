@@ -17,50 +17,6 @@ using namespace std;
 #include "stringset.h"
 
 const string CPP = "/usr/bin/cpp";
-const size_t LINESIZE = 1024;
-
-// Chomp the last character from a buffer if it is delim.
-static void chomp (char* string, char delim)
-{
-    size_t len = strlen (string);
-    if (len == 0) return;
-    char* nlpos = string + len - 1;
-    if (*nlpos == delim) *nlpos = '\0';
-}
-
-/* calls the C pre-processor, tokenizes the output,
- * and adds it to the stringset. */
-static void cpplines (FILE* pipe, char* filename)
-{
-    int linenr = 1;
-    char inputname[LINESIZE];
-    strcpy (inputname, filename);
-    for (;;) {
-        /* get the line */
-        char buffer[LINESIZE];
-        char* fgets_rc = fgets (buffer, LINESIZE, pipe);
-        if (fgets_rc == NULL) break;
-        /* remove the end whitespace */
-        chomp (buffer, '\n');
-        /* check for pre-processor directives */
-        int sscanf_rc = sscanf (buffer, "# %d \"%[^\"]\"",
-                &linenr, filename);
-        if (sscanf_rc == 2) {
-            continue;
-        }
-        /* tokenize the line */
-        char* savepos = NULL;
-        char* bufptr = buffer;
-        for (int tokenct = 1;; ++tokenct) {
-            char* token = strtok_r (bufptr, " \t\n", &savepos);
-            bufptr = NULL;
-            if (token == NULL) break;
-            /* add to stringset */
-            intern_stringset(token);
-        }
-        ++linenr;
-    }
-}
 
 FILE *oc_cpp_getfile(vector<string> *defines, char *filename)
 {

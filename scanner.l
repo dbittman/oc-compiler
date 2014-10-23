@@ -4,6 +4,7 @@
 #include "auxlib.h"
 #include "lyutils.h"
 
+//INV_STRING      ((\"{STRINGLIT_ITEM}*)(({STRINGLIT_INV_ITEM}+({STRINGLIT_ITEM}*(\"|\n)))|\n))
 #define YY_USER_ACTION  { scanner_useraction (); }
 #define IGNORE(THING)   { }
 
@@ -29,9 +30,9 @@ CHARACTER       ('{CHARLIT_ITEM}')
 STRING          (\"{STRINGLIT_ITEM}*\")
 IDENT           ({LETTER}({LETTER}|{DIGIT})*)
 
-INV_STRING      ((\"{STRINGLIT_ITEM}*)(({STRINGLIT_INV_ITEM}+({STRINGLIT_ITEM}*(\"|\n)))|\n))
 INV_IDENT       (({DIGIT}+){IDENT})
-INV_CHARACTER   ('((({CHARLIT_ITEM}|{CHARLIT_INV_ITEM}){2,}('|\n))|({CHARLIT_INV_ITEM}*('|\n))|({CHARLIT_ITEM}?\n)))
+INV_CHARACTER   '({CHARLIT_ITEM}|{CHARLIT_INV_ITEM}){2,}'|'({CHARLIT_INV_ITEM})?'|'({CHARLIT_ITEM}|{CHARLIT_INV_ITEM})*$
+INV_STRING      (\"{STRINGLIT_ITEM}*{STRINGLIT_INV_ITEM}+({STRINGLIT_ITEM}|{STRINGLIT_INV_ITEM})*\")|\"({STRINGLIT_ITEM}|{STRINGLIT_INV_ITEM})*$
 
 %%
 

@@ -109,8 +109,14 @@ int main (int argc, char** argv) {
         perror("failed to open output .tok file");
         return 1;
     }
-    scanner_scan(outfile);
+    int scan_errors = scanner_scan(outfile);
     fclose(outfile);
+
+    int err = pclose(cpp_pipe);
+    if(err) {
+        oc_errprintf("CPP returned failure status: exiting\n");
+        return 1;
+    }
 
     /* and write out the stringset to the output file */
     outfile = fopen(stroutfile.c_str(), "w");
@@ -120,6 +126,6 @@ int main (int argc, char** argv) {
     }
     dump_stringset(outfile);
     fclose(outfile);
-    return 0;
+    return scan_errors ? 2 : 0;
 }
 

@@ -1,4 +1,3 @@
-
 #include <vector>
 #include <string>
 using namespace std;
@@ -18,6 +17,8 @@ int scan_linenr = 1;
 int scan_offset = 0;
 bool scan_echo = false;
 vector<string> included_filenames;
+int scanner_errors = 0;
+FILE *tokdumpfile = NULL;
 
 const string* scanner_filename (int filenr) {
    return &included_filenames.at(filenr);
@@ -39,7 +40,8 @@ void scanner_setecho (bool echoflag) {
 
 void scanner_useraction (void) {
    if (scan_echo) {
-      if (scan_offset == 0) printf (";%5d: ", scan_linenr);
+      if (scan_offset == 0)
+          printf (";%5d: ", scan_linenr);
       printf ("%s", yytext);
    }
    scan_offset += yyleng;
@@ -50,6 +52,7 @@ void yyerror (const char* message) {
    errprintf ("%:%s: %d: %s\n",
               included_filenames.back().c_str(),
               scan_linenr, message);
+   scanner_errors++;
 }
 
 void scanner_badchar (unsigned char bad) {
@@ -58,24 +61,33 @@ void scanner_badchar (unsigned char bad) {
    errprintf ("%:%s: %d: invalid source character (%s)\n",
               included_filenames.back().c_str(),
               scan_linenr, char_rep);
+   scanner_errors++;
 }
 
 void scanner_badtoken (char* lexeme) {
    errprintf ("%:%s: %d: invalid token (%s)\n",
               included_filenames.back().c_str(),
               scan_linenr, lexeme);
+   scanner_errors++;
 }
 
 void scanner_invalidtoken(int token, char *lexeme) {
     errprintf("%:%s: %d: invalid %s: %s\n",
             included_filenames.back().c_str(),
             scan_linenr, get_yytname(token), lexeme);
+    scanner_errors++;
 }
 
 int yylval_token (int symbol) {
    int offset = scan_offset - yyleng;
    yylval = new_astree (symbol, included_filenames.size() - 1,
                         scan_linenr, offset, yytext);
+   /* scan_offset points to the end of the token...so, we subtract
+    * yyleng */
+   fprintf(tokdumpfile, "%3ld %3d.%3.3d %-16s (%s)\n",
+           &included_filenames.back() - &included_filenames[0],
+           scan_linenr, scan_offset - yyleng,
+           get_yytname(symbol), yytext);
    return symbol;
 }
 
@@ -95,7 +107,7 @@ void scanner_include (void) {
       errprintf ("%: %d: [%s]: invalid directive, ignored\n",
                  scan_rc, yytext);
    }else {
-      printf ("# %d \"%s\"\n", linenr, filename);
+      fprintf(tokdumpfile, "# %d %s\n", linenr, filename);
       scanner_newfilename (filename);
       scan_linenr = linenr - 1;
       DEBUGF ('m', "filename=%s, scan_linenr=%d\n",
@@ -103,15 +115,11 @@ void scanner_include (void) {
    }
 }
 
-void scanner_scan(FILE *outf)
+int scanner_scan(FILE *outf)
 {
     int symbol;
-    while((symbol = yylex()) != 0) {
-        /* scan_offset points to the end of the token...so, we subtract
-         * yyleng */
-        fprintf(outf, "%3ld %3d.%3.3d %-16s (%s)\n",
-                &included_filenames.back() - &included_filenames[0],
-                scan_linenr, scan_offset - yyleng, get_yytname(symbol), yytext);
-    }
+    tokdumpfile = outf;
+    while((symbol = yylex()) != 0);
+    return scanner_errors;
 }
 

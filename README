@@ -1,9 +1,6 @@
 Daniel Bittman (dbittman)
 
-This is an implementation of assignment 1.
+This is an implementation of assignment 2.
 
 No parter for this project.
-
-NOTE: The makefile uses a hardcoded path to g++ because the version of g++
-that runs when I just do 'g++' is old.
 

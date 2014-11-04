@@ -30,9 +30,15 @@ CHARACTER       ('{CHARLIT_ITEM}')
 STRING          (\"{STRINGLIT_ITEM}*\")
 IDENT           ({LETTER}({LETTER}|{DIGIT})*)
 
-INV_IDENT       (({DIGIT}+){IDENT})
-INV_CHARACTER   '({CHARLIT_ITEM}|{CHARLIT_INV_ITEM}){2,}'|'({CHARLIT_INV_ITEM})?'|'({CHARLIT_ITEM}|{CHARLIT_INV_ITEM})*$
-INV_STRING      (\"{STRINGLIT_ITEM}*{STRINGLIT_INV_ITEM}+({STRINGLIT_ITEM}|{STRINGLIT_INV_ITEM})*\")|\"({STRINGLIT_ITEM}|{STRINGLIT_INV_ITEM})*$
+INV_IDENT                (({DIGIT}+){IDENT})
+/* I could of course write these as a single regular expression, but I
+ * think the clarity here is better
+ */
+INV_CHARACTER_LENGTH     '({CHARLIT_ITEM}|{CHARLIT_INV_ITEM}){2,}'
+INV_CHARACTER_CONTENTS   '({CHARLIT_INV_ITEM})?'
+INV_CHARACTER_UNTERM     '({CHARLIT_ITEM}|{CHARLIT_INV_ITEM})*$
+INV_STRING_CONTENTS      (\"{STRINGLIT_ITEM}*{STRINGLIT_INV_ITEM}+({STRINGLIT_ITEM}|{STRINGLIT_INV_ITEM})*\")
+INV_STRING_UNTERM        \"({STRINGLIT_ITEM}|{STRINGLIT_INV_ITEM})*$
 
 %%
 
@@ -88,11 +94,14 @@ INV_STRING      (\"{STRINGLIT_ITEM}*{STRINGLIT_INV_ITEM}+({STRINGLIT_ITEM}|{STRI
 "<="            { return yylval_token (TOK_LE); }
 ">="            { return yylval_token (TOK_GE); }
 
-{INV_IDENT}     { scanner_invalidtoken(TOK_IDENT, yytext); } 
-{INV_CHARACTER} { scanner_invalidtoken(TOK_CHARCON, yytext); } 
-{INV_STRING}    { scanner_invalidtoken(TOK_STRINGCON, yytext); } 
+{INV_IDENT}              { scanner_invalidtoken(TOK_IDENT, yytext); } 
+{INV_CHARACTER_LENGTH}   { scanner_invalidtoken(TOK_CHARCON, yytext); } 
+{INV_CHARACTER_UNTERM}   { scanner_invalidtoken(TOK_CHARCON, yytext); } 
+{INV_CHARACTER_CONTENTS} { scanner_invalidtoken(TOK_CHARCON, yytext); } 
+{INV_STRING_CONTENTS}    { scanner_invalidtoken(TOK_STRINGCON, yytext); } 
+{INV_STRING_UNTERM}      { scanner_invalidtoken(TOK_STRINGCON, yytext); } 
 
-.               { scanner_badchar (*yytext); }
+.                        { scanner_badchar (*yytext); }
 
 %%
 

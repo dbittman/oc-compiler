@@ -28,4 +28,5 @@ void yyprint (FILE* outfile, unsigned short toknum,
 void free_ast (astree* tree);
 void free_ast2 (astree* tree1, astree* tree2);
 
+astree* tree_function(astree* ident, astree *arglist, astree* block);
 #endif

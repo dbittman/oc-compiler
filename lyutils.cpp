@@ -101,6 +101,7 @@ void scanner_include (void) {
    scanner_newline();
    char filename[strlen (yytext) + 1];
    int linenr;
+   fprintf(stderr, ":: %s\n", yytext);
    int scan_rc = sscanf (yytext, "# %d \"%[^\"]\"",
                          &linenr, filename);
    if (scan_rc != 2) {
@@ -113,13 +114,5 @@ void scanner_include (void) {
       DEBUGF ('m', "filename=%s, scan_linenr=%d\n",
               included_filenames.back().c_str(), scan_linenr);
    }
-}
-
-int scanner_scan(FILE *outf)
-{
-    int symbol;
-    tokdumpfile = outf;
-    while((symbol = yylex()) != 0);
-    return scanner_errors;
 }
 

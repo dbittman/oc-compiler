@@ -18,6 +18,8 @@ extern int yy_flex_debug;
 extern int yydebug;
 extern int yyleng;
 
+extern FILE *tokdumpfile;
+
 int yylex (void);
 int yyparse (void);
 void yyerror (const char* message);
@@ -43,5 +45,4 @@ typedef astree* astree_pointer;
 #define YYSTYPE astree_pointer
 #include "yyparse.h"
 
-RCSH("$Id: lyutils.h,v 1.2 2013-10-11 18:53:00-07 - - $")
 #endif

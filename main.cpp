@@ -19,13 +19,11 @@ char *progname = NULL;
 
 /* this contains a list of all flags supplied by -D. */
 vector<string> defines;
-/* other debugging flags */
-int debug_yyparse = 0;
 
 extern char *yytext;
 extern FILE *yyin;
-extern int yylex();
-extern int yy_flex_debug;
+extern int yyparse();
+extern int yy_flex_debug, yydebug;
 
 void usage()
 {
@@ -35,7 +33,6 @@ void usage()
 }
 
 int main (int argc, char** argv) {
-    FILE *outfile = NULL;
     /* basic init stuff for auxlib */
     progname = argv[0];
     set_execname(progname);
@@ -57,7 +54,7 @@ int main (int argc, char** argv) {
                 yy_flex_debug = 1;
                 break;
             case 'y':
-                debug_yyparse = 1;
+                yydebug = 1;
                 break;
         }
     }
@@ -87,6 +84,7 @@ int main (int argc, char** argv) {
     filename = string(basename(filename.c_str()));
     string stroutfile = filename + ".str";
     string tokoutfile = filename + ".tok";
+    string astoutfile = filename + ".ast";
 
     /* test for access to input file.
      * Yeah, we could call access(), but I'm lazy. */
@@ -104,13 +102,13 @@ int main (int argc, char** argv) {
         return 1;
     
     yyin = cpp_pipe;
-    outfile = fopen(tokoutfile.c_str(), "w");
-    if(!outfile) {
+    tokdumpfile = fopen(tokoutfile.c_str(), "w");
+    if(!tokdumpfile) {
         perror("failed to open output .tok file");
         return 1;
     }
-    int scan_errors = scanner_scan(outfile);
-    fclose(outfile);
+    int parse_errors = yyparse();
+    fclose(tokdumpfile);
 
     int err = pclose(cpp_pipe);
     if(err) {
@@ -119,13 +117,22 @@ int main (int argc, char** argv) {
     }
 
     /* and write out the stringset to the output file */
-    outfile = fopen(stroutfile.c_str(), "w");
-    if(!outfile) {
+    FILE *strfile = fopen(stroutfile.c_str(), "w");
+    if(!strfile) {
         perror("failed to open output file");
         return 1;
     }
-    dump_stringset(outfile);
-    fclose(outfile);
-    return scan_errors ? 2 : 0;
+    dump_stringset(strfile);
+    fclose(strfile);
+    
+    FILE *astfile = fopen(astoutfile.c_str(), "w");
+    if(!astfile) {
+        perror("failed to open output file\n");
+        return 1;
+    }
+    dump_astree(astfile, yyparse_astree);
+    fclose(astfile);
+
+    return parse_errors ? 2 : 0;
 }
 

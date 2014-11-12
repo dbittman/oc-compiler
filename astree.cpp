@@ -43,6 +43,15 @@ astree* adopt1sym (astree* root, astree* child, int symbol) {
    return root;
 }
 
+astree* tree_function(astree* ident, astree *arglist, astree* block) {
+    astree* function = new_astree(TOK_FUNCTION, ident->filenr, ident->linenr,
+            ident->offset, "<<FUNCTION>>");
+    adopt1(function, ident);
+    adopt1(function, arglist);
+    adopt1(function, block);
+    return function;
+}
+
 
 static void dump_node (FILE* outfile, astree* node) {
    fprintf (outfile, "%p->{%s(%d) %ld:%ld.%03ld \"%s\" [",

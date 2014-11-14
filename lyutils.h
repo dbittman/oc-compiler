@@ -41,6 +41,7 @@ int yylval_token (int symbol);
 
 void scanner_include (void);
 
+int oc_scan_and_parse();
 typedef astree* astree_pointer;
 #define YYSTYPE astree_pointer
 #include "yyparse.h"

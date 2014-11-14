@@ -107,7 +107,9 @@ int main (int argc, char** argv) {
         perror("failed to open output .tok file");
         return 1;
     }
-    int parse_errors = yyparse();
+    /* this basically just calls yyparse(), and is located
+     * in lyutils.cpp */
+    int parse_errors = oc_scan_and_parse();
     fclose(tokdumpfile);
 
     int err = pclose(cpp_pipe);

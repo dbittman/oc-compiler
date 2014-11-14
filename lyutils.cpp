@@ -49,9 +49,9 @@ void scanner_useraction (void) {
 
 void yyerror (const char* message) {
    assert (not included_filenames.empty());
-   errprintf ("%:%s: %d: %s\n",
+   errprintf ("%:%s: %d.%3.3d: %s\n",
               included_filenames.back().c_str(),
-              scan_linenr, message);
+              scan_linenr, scan_offset - yyleng, message);
    scanner_errors++;
 }
 
@@ -101,7 +101,6 @@ void scanner_include (void) {
    scanner_newline();
    char filename[strlen (yytext) + 1];
    int linenr;
-   fprintf(stderr, ":: %s\n", yytext);
    int scan_rc = sscanf (yytext, "# %d \"%[^\"]\"",
                          &linenr, filename);
    if (scan_rc != 2) {
@@ -114,5 +113,12 @@ void scanner_include (void) {
       DEBUGF ('m', "filename=%s, scan_linenr=%d\n",
               included_filenames.back().c_str(), scan_linenr);
    }
+}
+
+int oc_scan_and_parse()
+{
+    int ret = yyparse();
+    /* errors in the scanner, or errors in the parser */
+    return ret || scanner_errors;
 }
 

@@ -56,7 +56,7 @@ checks:
 	/afs/cats.ucsc.edu/courses/cmps104a-wm/bin/checksource ${SOURCES}
 
 submit:
-	submit cmps104a-wm.f14 asg2 ${SUBMITS}
+	submit cmps104a-wm.f14 asg3 ${SUBMITS}
 	mkdir -p sub
 	cp ${SUBMITS} sub/
 

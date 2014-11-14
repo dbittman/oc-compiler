@@ -9,4 +9,5 @@ yyparse.h
 *.output
 *.oh
 *.tok
+*.ast
 

@@ -44,35 +44,30 @@ astree* adopt1sym (astree* root, astree* child, int symbol) {
 }
 
 astree* tree_function(astree* ident, astree *arglist, astree* block) {
-    astree* function = new_astree(TOK_FUNCTION, ident->filenr, ident->linenr,
-            ident->offset, "<<FUNCTION>>");
+    int prototype = block->symbol == ';';
+    astree* function = new_astree(prototype ? TOK_PROTOTYPE : TOK_FUNCTION, ident->filenr, ident->linenr,
+            ident->offset, prototype ? "<<PROTOTYPE>>" : "<<FUNCTION>>");
     adopt1(function, ident);
     adopt1(function, arglist);
-    adopt1(function, block);
+    if(!prototype)
+        adopt1(function, block);
     return function;
 }
 
 
 static void dump_node (FILE* outfile, astree* node) {
-   fprintf (outfile, "%p->{%s(%d) %ld:%ld.%03ld \"%s\" [",
-            node, get_yytname (node->symbol), node->symbol,
-            node->filenr, node->linenr, node->offset,
-            node->lexinfo->c_str());
-   bool need_space = false;
-   for (size_t child = 0; child < node->children.size();
-        ++child) {
-      if (need_space) fprintf (outfile, " ");
-      need_space = true;
-      fprintf (outfile, "%p", node->children.at(child));
-   }
-   fprintf (outfile, "]}");
+    const char *tname = get_yytname(node->symbol);
+    if(strstr(tname, "TOK_") == tname)
+        tname += 4;
+   fprintf (outfile, "%s \"%s\" %ld.%ld.%ld", tname, node->lexinfo->c_str(), node->filenr, node->linenr, node->offset);
 }
 
 static void dump_astree_rec (FILE* outfile, astree* root,
                              int depth) {
    if (root == NULL) return;
-   fprintf (outfile, "%*s%s ", depth * 3, "",
-            root->lexinfo->c_str());
+   for(int i=0;i<depth;i++)
+       fprintf(outfile, "|  ");
+   //fprintf (outfile, "%*s", depth * 3, "");
    dump_node (outfile, root);
    fprintf (outfile, "\n");
    for (size_t child = 0; child < root->children.size();
@@ -84,17 +79,6 @@ static void dump_astree_rec (FILE* outfile, astree* root,
 
 void dump_astree (FILE* outfile, astree* root) {
    dump_astree_rec (outfile, root, 0);
-   fflush (NULL);
-}
-
-void yyprint (FILE* outfile, unsigned short toknum,
-              astree* yyvaluep) {
-   if (is_defined_token (toknum)) {
-      dump_node (outfile, yyvaluep);
-   }else {
-      fprintf (outfile, "%s(%d)\n",
-               get_yytname (toknum), toknum);
-   }
    fflush (NULL);
 }
 

@@ -14,6 +14,7 @@ using namespace std;
 #include "oc.h"
 #include "lyutils.h"
 #include "auxlib.h"
+#include "semantics.h"
 
 char *progname = NULL;
 
@@ -132,9 +133,12 @@ int main (int argc, char** argv) {
         perror("failed to open output file\n");
         return 1;
     }
+
+    /* do semantics */
+    oc_run_semantics(yyparse_astree);
+#warning "calc exit status from this too"
     dump_astree(astfile, yyparse_astree);
     fclose(astfile);
-
     return parse_errors ? 2 : 0;
 }
 

@@ -13,7 +13,7 @@ extern char *progname;
         fprintf(stderr, str); \
     } while(0);
 
-FILE *oc_cpp_getfile(vector<string> *defines, char *filename);
+FILE *oc_cpp_getfile(std::vector<std::string> *defines, char *filename);
 int scanner_scan(FILE *outf);
 
 #endif

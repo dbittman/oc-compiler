@@ -8,6 +8,9 @@
 #include "astree.h"
 #include "stringset.h"
 #include "lyutils.h"
+#include "type.h"
+#include "semantics.h"
+
 
 astree* new_astree (int symbol, int filenr, int linenr,
                     int offset, const char* lexinfo) {
@@ -17,6 +20,7 @@ astree* new_astree (int symbol, int filenr, int linenr,
    tree->linenr = linenr;
    tree->offset = offset;
    tree->lexinfo = intern_stringset (lexinfo);
+   tree->blocknr = 0;
    DEBUGF ('f', "astree %p->{%d:%d.%d: %s: \"%s\"}\n",
            tree, tree->filenr, tree->linenr, tree->offset,
            get_yytname (tree->symbol), tree->lexinfo->c_str());
@@ -25,6 +29,7 @@ astree* new_astree (int symbol, int filenr, int linenr,
 
 astree* adopt1 (astree* root, astree* child) {
    root->children.push_back (child);
+   child->parent = root;
    DEBUGF ('a', "%p (%s) adopting %p (%s)\n",
            root, root->lexinfo->c_str(),
            child, child->lexinfo->c_str());
@@ -59,7 +64,24 @@ static void dump_node (FILE* outfile, astree* node) {
     const char *tname = get_yytname(node->symbol);
     if(strstr(tname, "TOK_") == tname)
         tname += 4;
-   fprintf (outfile, "%s \"%s\" %ld.%ld.%ld", tname, node->lexinfo->c_str(), node->filenr, node->linenr, node->offset);
+   fprintf (outfile, "%s \"%s\" %ld.%ld.%ld {%d}", tname, node->lexinfo->c_str(), node->filenr, node->linenr, node->offset, node->blocknr);
+
+   /* okay, now print attributes */
+   attr_bitset attr = get_node_attributes(node);
+    for(int i=0;i<ATTR_bitset_size;i++) {
+        if(attr.test(i)) {
+            fprintf(outfile, " %s", attr_names[i]);
+            if(i == ATTR_struct) {
+                /* print struct name */
+                /* TODO */
+                assert(node->type_name);
+                fprintf(outfile, " \"%s\"", node->type_name->c_str());
+            }
+        }
+    }
+    if(node->symentry && node->symentry->definition != node)
+        fprintf(outfile, " (%ld.%ld.%ld)",
+                node->symentry->filenr, node->symentry->linenr, node->symentry->offset);
 }
 
 static void dump_astree_rec (FILE* outfile, astree* root,
@@ -67,7 +89,6 @@ static void dump_astree_rec (FILE* outfile, astree* root,
    if (root == NULL) return;
    for(int i=0;i<depth;i++)
        fprintf(outfile, "|  ");
-   //fprintf (outfile, "%*s", depth * 3, "");
    dump_node (outfile, root);
    fprintf (outfile, "\n");
    for (size_t child = 0; child < root->children.size();

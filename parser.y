@@ -36,7 +36,7 @@
 %left  TOK_EQ TOK_LE TOK_NE TOK_GE '>' '<'
 %left  '+' '-'
 %left  '*' '/' '%'
-%right PREC_UPLUS PREC_UMINUS '!' TOK_ORG TOK_CHR
+%right PREC_UPLUS PREC_UMINUS '!' TOK_ORD TOK_CHR
 %left  PREC_INDEX PREC_FIELD PREC_CALL
 %nonassoc TOK_NEW
 %nonassoc PREC_PAREN
@@ -145,7 +145,7 @@ funcargs : funcargs ',' identdecl         { $$ = adopt1($1, $3); }
          ;
 
 identdecl : basetype TOK_IDENT            { $2->symbol = TOK_DECLID; $$ = adopt1($1, $2); }
-          | basetype TOK_ARRAY TOK_IDENT  { $$ = adopt2($2, $1, $3); }
+          | basetype TOK_ARRAY TOK_IDENT  { $3->symbol = TOK_DECLID; $$ = adopt2($2, $1, $3); }
           ;
 
 basetype : TOK_VOID
@@ -164,7 +164,7 @@ structcont : structcont fielddecl ';'     { $$ = adopt1($1, $2); }
            ;
 
 fielddecl : basetype TOK_IDENT            { $2->symbol = TOK_FIELD; $$ = adopt1($1, $2); }
-          | basetype TOK_ARRAY TOK_IDENT  { $$ = adopt2($2, $1, $3); }
+          | basetype TOK_ARRAY TOK_IDENT  { $3->symbol = TOK_FIELD; $$ = adopt2($2, $1, $3); }
           ;
 
 %%

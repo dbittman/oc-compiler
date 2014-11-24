@@ -20,6 +20,7 @@ struct symbol {
     size_t block_nr;
     vector<symbol *> params;
     astree *definition;
+    astree *fnblock; /* for functions, this is set. for prototypes, it isn't */
     struct symbol *type;
     const string *type_name;
 };
@@ -27,14 +28,21 @@ struct symbol {
 #define SCOPE_GLOBAL 0
 
 extern size_t next_block ;
+extern FILE *symfile;
 extern vector<size_t> block_num_stack;
 extern vector<symbol_table*> symbol_stack;
 /* has function and struct definitions, along with global code statements */
 extern symbol_table *typeid_table;
 extern const string *current_function;
-void node_generate_attributes(astree *node, attr_bitset &attr);
+extern const string *current_structure;
+extern size_t print_depth;
+int node_generate_attributes(astree *node, attr_bitset &attr);
 
-int oc_run_semantics(astree *root);
+#define type_attrs_string(x) __typeid_attrs_string(x->attributes, x->type_name)
+string __typeid_attrs_string(attr_bitset attr, const string *type_name);
+
+int typecheck_compare_functions(astree *f1, astree *f2);
+int oc_run_semantics(astree *root, FILE *);
 int scope_get_current_depth();
 symbol_table *scope_get_global_table();
 symbol_table *scope_get_current_table();

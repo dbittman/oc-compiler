@@ -86,6 +86,7 @@ int main (int argc, char** argv) {
     string stroutfile = filename + ".str";
     string tokoutfile = filename + ".tok";
     string astoutfile = filename + ".ast";
+    string symoutfile = filename + ".sym";
 
     /* test for access to input file.
      * Yeah, we could call access(), but I'm lazy. */
@@ -134,11 +135,17 @@ int main (int argc, char** argv) {
         return 1;
     }
 
+    FILE *symtablefile = fopen(symoutfile.c_str(), "w");
+    if(!astfile) {
+        perror("failed to open output file\n");
+        return 1;
+    }
     /* do semantics */
-    oc_run_semantics(yyparse_astree);
-#warning "calc exit status from this too"
+    int semantic_errors =
+        oc_run_semantics(yyparse_astree, symtablefile);
     dump_astree(astfile, yyparse_astree);
     fclose(astfile);
-    return parse_errors ? 2 : 0;
+    fclose(symtablefile);
+    return (parse_errors + semantic_errors > 0) ? 2 : 0;
 }
 

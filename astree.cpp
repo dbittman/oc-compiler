@@ -50,8 +50,13 @@ astree* adopt1sym (astree* root, astree* child, int symbol) {
 
 astree* tree_function(astree* ident, astree *arglist, astree* block) {
     int prototype = block->symbol == ';';
-    astree* function = new_astree(prototype ? TOK_PROTOTYPE : TOK_FUNCTION, ident->filenr, ident->linenr,
-            ident->offset, prototype ? "<<PROTOTYPE>>" : "<<FUNCTION>>");
+    astree* function = new_astree(prototype ?
+                TOK_PROTOTYPE : 
+                TOK_FUNCTION,
+            ident->filenr, ident->linenr,
+            ident->offset, prototype ? 
+                "<<PROTOTYPE>>" : 
+                "<<FUNCTION>>");
     adopt1(function, ident);
     adopt1(function, arglist);
     if(!prototype)
@@ -64,24 +69,16 @@ static void dump_node (FILE* outfile, astree* node) {
     const char *tname = get_yytname(node->symbol);
     if(strstr(tname, "TOK_") == tname)
         tname += 4;
-   fprintf (outfile, "%s \"%s\" %ld.%ld.%ld {%d}", tname, node->lexinfo->c_str(), node->filenr, node->linenr, node->offset, node->blocknr);
+   fprintf (outfile, "%s \"%s\" %ld.%ld.%ld {%d} %s",
+           tname, node->lexinfo->c_str(), node->filenr,
+           node->linenr, node->offset, node->blocknr,
+           __typeid_attrs_string(get_node_attributes(node),
+               node->type_name).c_str());
 
-   /* okay, now print attributes */
-   attr_bitset attr = get_node_attributes(node);
-    for(int i=0;i<ATTR_bitset_size;i++) {
-        if(attr.test(i)) {
-            fprintf(outfile, " %s", attr_names[i]);
-            if(i == ATTR_struct) {
-                /* print struct name */
-                /* TODO */
-                assert(node->type_name);
-                fprintf(outfile, " \"%s\"", node->type_name->c_str());
-            }
-        }
-    }
     if(node->symentry && node->symentry->definition != node)
         fprintf(outfile, " (%ld.%ld.%ld)",
-                node->symentry->filenr, node->symentry->linenr, node->symentry->offset);
+                node->symentry->filenr,
+                node->symentry->linenr, node->symentry->offset);
 }
 
 static void dump_astree_rec (FILE* outfile, astree* root,

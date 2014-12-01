@@ -26,8 +26,8 @@
 // synthetic tokens
 %token TOK_ROOT TOK_BLOCK TOK_PARAMLIST TOK_DECLID
 %token TOK_FUNCTION TOK_TYPEID TOK_FIELD TOK_VARDECL TOK_IFELSE
-%token TOK_RETURNVOID TOK_NEWSTRING TOK_NEWARRAY TOK_INDEX TOK_CALL TOK_POS TOK_NEG
-%token TOK_PROTOTYPE
+%token TOK_RETURNVOID TOK_NEWSTRING TOK_NEWARRAY TOK_INDEX
+%token TOK_PROTOTYPE TOK_CALL TOK_POS TOK_NEG
 
 %start start
 
@@ -62,28 +62,38 @@ statement : expr ';'                { $$ = $1; }
           | returnstate
           ;
 
-returnstate : TOK_RETURN expr ';'                              { $$ = adopt1($1, $2); }
-            | TOK_RETURN ';'                                   { $1->symbol = TOK_RETURNVOID; $$ = $1; }
+returnstate : TOK_RETURN expr ';'                              
+                { $$ = adopt1($1, $2); }
+            | TOK_RETURN ';'                                   
+                { $1->symbol = TOK_RETURNVOID; $$ = $1; }
             ;
 
-ifelse : TOK_IF '(' expr ')' statement                         { $$ = adopt2($1, $3, $5);}
-       | TOK_IF '(' expr ')' statement TOK_ELSE statement      { $$ = adopt2($1, $3, $5); adopt1sym($1, $7, TOK_IFELSE);}
+ifelse : TOK_IF '(' expr ')' statement                         
+            { $$ = adopt2($1, $3, $5);}
+       | TOK_IF '(' expr ')' statement TOK_ELSE statement      
+            { $$ = adopt2($1, $3, $5); adopt1sym($1, $7, TOK_IFELSE);}
        ;
 
-whileloop : TOK_WHILE '(' expr ')' statement                   { $$ = adopt2($1, $3, $5); }
+whileloop : TOK_WHILE '(' expr ')' statement                   
+                { $$ = adopt2($1, $3, $5); }
           ;
 
-vardecl : identdecl '=' expr ';'                               { $2->symbol = TOK_VARDECL; $$ = adopt2($2, $1, $3); }
+vardecl : identdecl '=' expr ';'                               
+                { $2->symbol = TOK_VARDECL; $$ = adopt2($2, $1, $3); }
         ;
 
 
-block : blockcontents '}'                                      { $$ = $1; }
-      | ';'                                                    { $$ = $1; }
+block : blockcontents '}'                                      
+            { $$ = $1; }
+      | ';'                                                    
+            { $$ = $1; }
       ;
 
 blockcontents : blockcontents statement { $$ = adopt1($1, $2); }
-              | '{'                     { $1->symbol = TOK_BLOCK; $$ = $1; }
-              | '{' statement           { $$ = adopt1sym($1, $2, TOK_BLOCK); }
+              | '{'                     
+                    { $1->symbol = TOK_BLOCK; $$ = $1; }
+              | '{' statement           
+                    { $$ = adopt1sym($1, $2, TOK_BLOCK); }
               ;
 
 expr : expr '+' expr                    { $$ = adopt2($2, $1, $3); }
@@ -98,8 +108,10 @@ expr : expr '+' expr                    { $$ = adopt2($2, $1, $3); }
      | expr '>' expr                    { $$ = adopt2($2, $1, $3); }
      | expr '<' expr                    { $$ = adopt2($2, $1, $3); }
      | expr '=' expr                    { $$ = adopt2($2, $1, $3); }
-     | '-' expr %prec PREC_UMINUS       { $1->symbol = TOK_NEG; $$ = adopt1($1, $2); }
-     | '+' expr %prec PREC_UPLUS        { $1->symbol = TOK_POS; $$ = adopt1($1, $2); }
+     | '-' expr %prec PREC_UMINUS       
+            { $1->symbol = TOK_NEG; $$ = adopt1($1, $2); }
+     | '+' expr %prec PREC_UPLUS        
+            { $1->symbol = TOK_POS; $$ = adopt1($1, $2); }
      | '!' expr                         { $$ = adopt1($1, $2); }
      | TOK_ORD expr                     { $$ = adopt1($1, $2); }
      | TOK_CHR expr                     { $$ = adopt1($1, $2); }
@@ -110,22 +122,30 @@ expr : expr '+' expr                    { $$ = adopt2($2, $1, $3); }
      | call
      ;
 
-call : TOK_IDENT '(' ')'                                { $2->symbol = TOK_CALL; $$ = adopt1($2, $1); }
+call : TOK_IDENT '(' ')'                                
+            { $2->symbol = TOK_CALL; $$ = adopt1($2, $1); }
      | callargs ')' %prec PREC_CALL                     { $$ = $1; }
      ;
 
-callargs : callargs ',' expr                            { $$ = adopt1($1, $3); }
-         | TOK_IDENT '(' expr                           { $2->symbol = TOK_CALL; $$ = adopt2($2, $1, $3); }
+callargs : callargs ',' expr                            
+                { $$ = adopt1($1, $3); }
+         | TOK_IDENT '(' expr                           
+                { $2->symbol = TOK_CALL; $$ = adopt2($2, $1, $3); }
          ;
 
-allocator : TOK_NEW TOK_IDENT '(' ')'                   { $2->symbol = TOK_TYPEID; $$ = adopt1($1, $2); }
-          | TOK_NEW TOK_STRING '(' expr ')'             { $1->symbol = TOK_NEWSTRING; $$ = adopt1($1, $4); }
-          | TOK_NEW basetype '[' expr ']'               { $1->symbol = TOK_NEWARRAY; $$ = adopt2($1, $2, $4); }
+allocator : TOK_NEW TOK_IDENT '(' ')'                   
+                { $2->symbol = TOK_TYPEID; $$ = adopt1($1, $2); }
+          | TOK_NEW TOK_STRING '(' expr ')'             
+                { $1->symbol = TOK_NEWSTRING; $$ = adopt1($1, $4); }
+          | TOK_NEW basetype '[' expr ']'               
+                { $1->symbol = TOK_NEWARRAY; $$ = adopt2($1, $2, $4); }
           ;
 
 variable : TOK_IDENT
-         | expr '[' expr ']' %prec PREC_INDEX       { $2->symbol = TOK_INDEX; $$ = adopt2($2, $1, $3); }
-         | expr '.' TOK_IDENT %prec PREC_FIELD      { $3->symbol = TOK_FIELD; $$ = adopt2($2, $1, $3); }
+         | expr '[' expr ']' %prec PREC_INDEX       
+                { $2->symbol = TOK_INDEX; $$ = adopt2($2, $1, $3); }
+         | expr '.' TOK_IDENT %prec PREC_FIELD      
+                { $3->symbol = TOK_FIELD; $$ = adopt2($2, $1, $3); }
          ;
 
 constant : TOK_INTCON               { $$ = $1; }
@@ -136,16 +156,24 @@ constant : TOK_INTCON               { $$ = $1; }
          | TOK_NULL                 { $$ = $1; }
          ;
 
-function : identdecl funcargs ')' block   { $$ = tree_function($1, $2, $4); }
-         | identdecl '(' ')' block        { $2->symbol = TOK_PARAMLIST; $$ = tree_function($1, $2, $4); }
+function : identdecl funcargs ')' block   
+                { $$ = tree_function($1, $2, $4); }
+         | identdecl '(' ')' block        
+                { $2->symbol = TOK_PARAMLIST; 
+                $$ = tree_function($1, $2, $4); }
          ;
 
-funcargs : funcargs ',' identdecl         { $$ = adopt1($1, $3); }
-         | '(' identdecl                  { $1->symbol = TOK_PARAMLIST; $$ = $2 ? adopt1($1, $2) : $1; }
+funcargs : funcargs ',' identdecl         
+                { $$ = adopt1($1, $3); }
+         | '(' identdecl                  
+                { $1->symbol = TOK_PARAMLIST; 
+                $$ = $2 ? adopt1($1, $2) : $1; }
          ;
 
-identdecl : basetype TOK_IDENT            { $2->symbol = TOK_DECLID; $$ = adopt1($1, $2); }
-          | basetype TOK_ARRAY TOK_IDENT  { $3->symbol = TOK_DECLID; $$ = adopt2($2, $1, $3); }
+identdecl : basetype TOK_IDENT            
+                { $2->symbol = TOK_DECLID; $$ = adopt1($1, $2); }
+          | basetype TOK_ARRAY TOK_IDENT  
+                { $3->symbol = TOK_DECLID; $$ = adopt2($2, $1, $3); }
           ;
 
 basetype : TOK_VOID
@@ -153,18 +181,23 @@ basetype : TOK_VOID
          | TOK_INT
          | TOK_CHAR
          | TOK_STRING
-         | TOK_IDENT                      { $1->symbol = TOK_TYPEID; $$ = $1; }
+         | TOK_IDENT                      
+                { $1->symbol = TOK_TYPEID; $$ = $1; }
          ;
 
 structdef : structcont '}'                { $$ = $1; }
           ;
 
-structcont : structcont fielddecl ';'     { $$ = adopt1($1, $2); }
-           | TOK_STRUCT TOK_IDENT '{'     { $2->symbol = TOK_TYPEID; $$ = adopt1($1, $2); }
+structcont : structcont fielddecl ';'     
+                { $$ = adopt1($1, $2); }
+           | TOK_STRUCT TOK_IDENT '{'     
+                { $2->symbol = TOK_TYPEID; $$ = adopt1($1, $2); }
            ;
 
-fielddecl : basetype TOK_IDENT            { $2->symbol = TOK_FIELD; $$ = adopt1($1, $2); }
-          | basetype TOK_ARRAY TOK_IDENT  { $3->symbol = TOK_FIELD; $$ = adopt2($2, $1, $3); }
+fielddecl : basetype TOK_IDENT            
+                { $2->symbol = TOK_FIELD; $$ = adopt1($1, $2); }
+          | basetype TOK_ARRAY TOK_IDENT  
+                { $3->symbol = TOK_FIELD; $$ = adopt2($2, $1, $3); }
           ;
 
 %%

@@ -4,7 +4,6 @@
 #include "auxlib.h"
 #include "lyutils.h"
 
-//INV_STRING      ((\"{STRINGLIT_ITEM}*)(({STRINGLIT_INV_ITEM}+({STRINGLIT_ITEM}*(\"|\n)))|\n))
 #define YY_USER_ACTION  { scanner_useraction (); }
 #define IGNORE(THING)   { }
 
@@ -23,7 +22,7 @@ DIGIT               [0-9]
 CHARLIT_ITEM        ([^\\'\n]|\\[\\'"0nt])
 CHARLIT_INV_ITEM    (\\[^\\'"0nt])
 STRINGLIT_ITEM      ([^\\"\n]|\\[\\'"0nt])
-STRINGLIT_INV_ITEM  (\\[^\\'"0nt])
+STRLIT_INV_ITEM  (\\[^\\'"0nt])
 
 NUMBER          ({DIGIT}+)
 CHARACTER       ('{CHARLIT_ITEM}')
@@ -37,8 +36,10 @@ INV_IDENT                (({DIGIT}+){IDENT})
 INV_CHARACTER_LENGTH     '({CHARLIT_ITEM}|{CHARLIT_INV_ITEM}){2,}'
 INV_CHARACTER_CONTENTS   '({CHARLIT_INV_ITEM})?'
 INV_CHARACTER_UNTERM     '({CHARLIT_ITEM}|{CHARLIT_INV_ITEM})*$
-INV_STRING_CONTENTS      (\"{STRINGLIT_ITEM}*{STRINGLIT_INV_ITEM}+({STRINGLIT_ITEM}|{STRINGLIT_INV_ITEM})*\")
-INV_STRING_UNTERM        \"({STRINGLIT_ITEM}|{STRINGLIT_INV_ITEM})*$
+/* checksource is evil */
+IVSC_1              ({STRINGLIT_ITEM}|{STRLIT_INV_ITEM})
+INV_STRING_CONTENTS (\"{STRINGLIT_ITEM}*{STRLIT_INV_ITEM}+IVSC_1*\")
+INV_STRING_UNTERM        \"({STRINGLIT_ITEM}|{STRLIT_INV_ITEM})*$
 
 %%
 
@@ -98,8 +99,10 @@ INV_STRING_UNTERM        \"({STRINGLIT_ITEM}|{STRINGLIT_INV_ITEM})*$
 {INV_CHARACTER_LENGTH}   { scanner_invalidtoken(TOK_CHARCON, yytext); } 
 {INV_CHARACTER_UNTERM}   { scanner_invalidtoken(TOK_CHARCON, yytext); } 
 {INV_CHARACTER_CONTENTS} { scanner_invalidtoken(TOK_CHARCON, yytext); } 
-{INV_STRING_CONTENTS}    { scanner_invalidtoken(TOK_STRINGCON, yytext); } 
-{INV_STRING_UNTERM}      { scanner_invalidtoken(TOK_STRINGCON, yytext); } 
+{INV_STRING_CONTENTS}    { 
+            scanner_invalidtoken(TOK_STRINGCON, yytext); } 
+{INV_STRING_UNTERM}      {
+            scanner_invalidtoken(TOK_STRINGCON, yytext); } 
 
 .                        { scanner_badchar (*yytext); }
 

@@ -118,6 +118,29 @@ attr_bitset get_node_attributes(astree *node)
 #define childnode(n) (node->children[n])
 #define BIT(x) attr_bitset(1 << x)
 
+/* Okay. A lot of these typechecks come down to checking child nodes
+ * against several restrictions:
+ *     - A list of attributes that are not allowed
+ *     - A list of attributes that are required
+ *     - A list of attributes of which at least one must be set.
+ * While there are several special cases, these cover a lot of cases.
+ *
+ * I have written a couple of functions that check these conditions,
+ * given a node and a bitset, we can check allowed, required, and
+ * disallowed. This also allows a centralized system to print out
+ * (possibly cryptic at first) error messages.
+ *
+ * Additionally, a typecheck comes down to testing each of these
+ * conditions multiple times against different bitsets. Because of
+ * this, a macro CONDRETURN is defined, which simplifies this.
+ * If any of these conditions return false, we want to return
+ * false for the typecheck. Thus, we rely on a variable named
+ * 'res' which is returned at the end of the function.
+ *
+ * Yes, I know that #defines are 'dangerous'. This is fine, and works.
+ * And even Mackey uses them, so I can too!
+ */
+
 #define CONDRETURN(x) if(!x) res = 0
 
 int attr_check_required(astree *node, attr_bitset required)
@@ -175,6 +198,9 @@ int attr_check_any(astree *node, attr_bitset sets)
     return 0;
 }
 
+/* each of these functions handles a specific node. They
+ * should be pretty self-explanitory. */
+
 int attr_handle_binop(astree *node)
 {
     node->attributes.set(ATTR_int);
@@ -228,6 +254,8 @@ int attr_handle_unop(astree *node)
     (PRIMITIVE | attr_bitset(1 << ATTR_struct) | \
      attr_bitset(1 << ATTR_string))
 
+/* this does the "compatible" check as defined by the typecheck
+ * grammar */
 int attr_check_compatible(astree *node, attr_bitset a, attr_bitset b)
 {
     if((a & ANY) == (b & ANY))
@@ -314,6 +342,7 @@ int attr_handle_call(astree *node)
     if(!func) {
         return 0;
     }
+    /* check parameters */
     unsigned int num_params = node->children.size() - 1;
     if(num_params != func->params.size()) {
         fprintf(stderr,

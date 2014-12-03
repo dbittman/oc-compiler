@@ -9,10 +9,11 @@ DEPFILE    = Makefile.dep
 SOURCES    = cppstrtok.cpp main.cpp stringset.cpp \
 			 astree.cpp lyutils.cpp auxlib.cpp \
 			 semantics.cpp \
-			 typecheck.cpp symbol.cpp
+			 typecheck.cpp symbol.cpp \
+			 emit.cpp
 GENSRCS    = yyparse.cpp yylex.cpp
 HEADERS    = stringset.h oc.h auxlib.h lyutils.h astree.h \
-			 semantics.h type.h
+			 semantics.h type.h emit.h
 OBJECTS    = ${SOURCES:.cpp=.o} ${GENSRCS:.cpp=.o}
 EXECBIN    = oc
 SRCFILES   = ${HEADERS} ${SOURCES} ${MKFILE}

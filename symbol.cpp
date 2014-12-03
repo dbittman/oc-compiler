@@ -131,6 +131,20 @@ int typeid_table_field_select(astree *node)
     return 0;
 }
 
+static void __print_symbol(symbol *sym, astree *decl, attr_bitset attr)
+{
+    fprintf(symfile, "%*s%s (%ld.%ld.%ld)", (int)print_depth * 3, "",
+            decl->lexinfo->c_str(), decl->filenr,
+            decl->linenr, decl->offset);
+
+    if(attr.test(ATTR_field)) {
+        fprintf(symfile, " field {%s} ", current_structure->c_str());
+    } else {
+        fprintf(symfile, " {%ld} ", sym->block_nr);
+    }
+    fprintf(symfile, "%s\n", type_attrs_string(sym).c_str());
+}
+
 symbol *symbolize_declaration(symbol_table *table, astree *node,
         attr_bitset initial_attr)
 {
@@ -157,7 +171,8 @@ symbol *symbolize_declaration(symbol_table *table, astree *node,
     symbol *prev_sym;
     if((prev_sym = find_symbol_in_table(table, decl->lexinfo))) {
         if(initial_attr.test(ATTR_function) && !prev_sym->fnblock) {
-           return prev_sym; 
+            __print_symbol(prev_sym, decl, attr);
+            return prev_sym; 
         } else {
             fprintf(stderr,
                     "%ld.%2ld.%3.3ld: duplicate declaration of"
@@ -183,17 +198,7 @@ symbol *symbolize_declaration(symbol_table *table, astree *node,
     sym->block_nr = get_current_block();
     decl->blocknr = get_current_block();
     node->blocknr = get_current_block();
-    fprintf(symfile, "%*s%s (%ld.%ld.%ld)", (int)print_depth * 3, "",
-            decl->lexinfo->c_str(), decl->filenr,
-            decl->linenr, decl->offset);
-
-    if(attr.test(ATTR_field)) {
-        fprintf(symfile, " field {%s} ", current_structure->c_str());
-    } else {
-        fprintf(symfile, " {%ld} ", sym->block_nr);
-    }
-    fprintf(symfile, "%s\n", type_attrs_string(sym).c_str());
-
+    __print_symbol(sym, decl, attr);
     return sym;
 }
 

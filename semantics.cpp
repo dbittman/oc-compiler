@@ -68,7 +68,7 @@ int handle_structure(astree *node)
     node->children[0]->blocknr = 0;
     sym->attributes.set(ATTR_typeid);
     sym->block_nr = 0;
-    
+
     print_depth++;
 
     symbol_table *field_table = new symbol_table();
@@ -97,10 +97,35 @@ int handle_function(astree *node)
         semantic_errors++;
         return 1;
     }
+    if(node->children.size() == 2) {
+        /* prototype */
+        astree *decl;
+        if(node->children[0]->symbol == TOK_ARRAY)
+            decl = node->children[0]->children[1];
+        else
+            decl = node->children[0]->children[0];
+        symbol *sym;
+        if((sym = find_symbol_in_table(scope_get_global_table(),
+                        decl->lexinfo))) {
+            /* found a previous prototype */
+            astree *prototype = sym->definition->parent->parent;
+            if(!typecheck_compare_functions(prototype, node)) {
+                fprintf(stderr,
+                        "%ld.%2ld%3.3ld: function has mis-matching"
+                        " prototype (declared at %ld.%2ld.%3.3ld)\n",
+                        node->filenr, node->linenr, node->offset,
+                        prototype->filenr, prototype->linenr,
+                        prototype->offset);
+                semantic_errors++;
+                return 1;
+            }
+            return 0;
+        }
+    }
     symbol *sym =
         symbolize_declaration(scope_get_global_table(),
                 node->children[0], attr_bitset(1 << ATTR_function));
-    
+
     if(sym) {
         if(sym->definition->parent != node->children[0]) {
             /* found a previous prototype */
@@ -126,13 +151,18 @@ int handle_function(astree *node)
     print_depth++;
     astree *params = node->children[1];
     params->blocknr = get_current_block();
-    for (size_t child = 0; child < params->children.size(); ++child) {
-        symbol *paramsym = symbolize_declaration(scope_get_top_table(),
+    /* in case we're re-processing params */ 
+    sym->params.clear();
+    for (size_t child = 0; child < params->children.size();
+                ++child) {
+        symbol *paramsym = symbolize_declaration(
+                scope_get_top_table(),
                 params->children[child],
                 attr_bitset(1 << ATTR_param));
         sym->params.push_back(paramsym);
     }
     fprintf(symfile, "\n");
+
     if(node->symbol == TOK_FUNCTION) {
         /* manually parse the block */
         astree *block = node->children[2];
@@ -143,9 +173,10 @@ int handle_function(astree *node)
             dfs_traverse(block->children[child]);
         }
     }
+    fprintf(symfile, "\n");
     leave_block();
     print_depth--;
-    
+
     current_function = NULL;
 
     return 0;
@@ -181,7 +212,7 @@ int dfs_traverse(astree *node)
                         " unknown typeid '%s'\n",
                         node->filenr, node->linenr, node->offset,
                         node->type_name ?
-                            node->type_name->c_str() : "???");
+                        node->type_name->c_str() : "???");
                 semantic_errors++;
             }
             break;

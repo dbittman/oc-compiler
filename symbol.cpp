@@ -164,10 +164,14 @@ symbol *symbolize_declaration(symbol_table *table, astree *node,
         return 0;
     }
     astree *decl;
-    if(node->symbol == TOK_ARRAY)
+    const string *typenm;
+    if(node->symbol == TOK_ARRAY) {
         decl = node->children[1];
-    else
+        typenm = node->children[0]->lexinfo;
+    } else {
         decl = node->children[0];
+        typenm = node->lexinfo;
+    }
     symbol *prev_sym;
     if((prev_sym = find_symbol_in_table(table, decl->lexinfo))) {
         if(initial_attr.test(ATTR_function) && !prev_sym->fnblock) {
@@ -191,8 +195,8 @@ symbol *symbolize_declaration(symbol_table *table, astree *node,
     /* additionally, if we're declaring a struct, grab the typeid */
     sym->type_name = NULL;
     if(attr.test(ATTR_struct)) {
-        sym->type_name = node->lexinfo;
-        decl->type_name = node->lexinfo;
+        sym->type_name = typenm;
+        decl->type_name = typenm;
     }
     sym->attributes = attr;
     sym->block_nr = get_current_block();

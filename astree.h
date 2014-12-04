@@ -21,6 +21,7 @@ struct astree {
     struct symbol *symentry;
     attr_bitset attributes;
     const string *type_name;
+    const string *oilname;
     int blocknr;
 };
 

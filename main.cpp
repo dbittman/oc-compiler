@@ -15,6 +15,7 @@ using namespace std;
 #include "lyutils.h"
 #include "auxlib.h"
 #include "semantics.h"
+#include "emit.h"
 
 char *progname = NULL;
 
@@ -87,6 +88,7 @@ int main (int argc, char** argv) {
     string tokoutfile = filename + ".tok";
     string astoutfile = filename + ".ast";
     string symoutfile = filename + ".sym";
+    string oiloutfile = filename + ".oil";
 
     /* test for access to input file.
      * Yeah, we could call access(), but I'm lazy. */
@@ -136,16 +138,28 @@ int main (int argc, char** argv) {
     }
 
     FILE *symtablefile = fopen(symoutfile.c_str(), "w");
-    if(!astfile) {
+    if(!symtablefile) {
         perror("failed to open output file\n");
         return 1;
     }
+    
+    FILE *oilfile = fopen(oiloutfile.c_str(), "w");
+    if(!oilfile) {
+        perror("failed to open output file\n");
+        return 1;
+    }
+
     /* do semantics */
     int semantic_errors =
         oc_run_semantics(yyparse_astree, symtablefile);
+    int emit_errors=0;
+    if(parse_errors + semantic_errors == 0) {
+        emit_errors = 
+            oc_run_emit(yyparse_astree, oilfile);
+    }
     dump_astree(astfile, yyparse_astree);
     fclose(astfile);
     fclose(symtablefile);
-    return (parse_errors + semantic_errors > 0) ? 2 : 0;
+    return (parse_errors + semantic_errors + emit_errors > 0) ? 2 : 0;
 }
 

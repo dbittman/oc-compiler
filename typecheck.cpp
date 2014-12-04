@@ -310,6 +310,7 @@ int attr_handle_new(astree *node)
         case TOK_NEWARRAY:
             node->attributes = (childattr(0) & BASE) 
                 | BIT(ATTR_array) | BIT(ATTR_vreg);
+            node->type_name = childnode(0)->type_name;
 
             res = attr_check_required(childnode(1), BIT(ATTR_int))
                 && attr_check_notallowed(childnode(1),
@@ -500,6 +501,7 @@ int attr_handle_type(astree *node)
         node->type_name = node->children[childnr]->type_name;
     }
     node->attributes = childattr(childnr);
+    node->type_name = childnode(childnr)->type_name;
     return 1;
 }
 

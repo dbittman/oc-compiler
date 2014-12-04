@@ -21,6 +21,7 @@ astree* new_astree (int symbol, int filenr, int linenr,
    tree->offset = offset;
    tree->lexinfo = intern_stringset (lexinfo);
    tree->blocknr = 0;
+   tree->oilname = 0;
    DEBUGF ('f', "astree %p->{%d:%d.%d: %s: \"%s\"}\n",
            tree, tree->filenr, tree->linenr, tree->offset,
            get_yytname (tree->symbol), tree->lexinfo->c_str());

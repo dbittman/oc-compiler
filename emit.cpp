@@ -2,6 +2,7 @@
 #include <vector>
 #include <cstdio>
 #include <cassert>
+#include <cstring>
 
 #include "semantics.h"
 #include "astree.h"
@@ -13,7 +14,7 @@ size_t reg_nr = 1, str_nr = 1;
 #define INDENT "        "
 vector<const string *> globalstrings;
 
-static string *register_alloc(char *type)
+static string *register_alloc(const char *type)
 {
     return new string(string(type) + to_string(reg_nr++));
 }
@@ -30,6 +31,15 @@ int test_is_operand(astree *node)
         || node->symbol == TOK_INTCON
         || node->symbol == TOK_CHARCON;
 }
+
+#define INT  0
+#define BOOL 1
+#define CHAR 2
+#define PTR  3
+
+static const char *rcategory[4] = {
+    "i", "b", "c", "p"
+};
 
 const char *get_result_type_name(astree *node)
 {
@@ -55,6 +65,40 @@ const char *get_result_type_name(astree *node)
             (attr.test(ATTR_array) ? string("*") : string("")) + 
             (node->symbol == '.' ? string("*") : string("")));
     return str->c_str();
+}
+
+const char *register_category(astree *node)
+{
+    const char *cat = NULL;
+    switch(node->symbol) {
+        case '+': case '-': case '*': case '/':
+        case '%': case TOK_POS: case TOK_NEG:
+        case TOK_ORD:
+            cat = rcategory[INT];
+            break;
+        case '>': case '<': case TOK_EQ:
+        case TOK_NE: case TOK_LE: case TOK_GE: 
+        case '!':
+            cat = rcategory[BOOL];
+            break;
+        case TOK_CHR:
+            cat = rcategory[CHAR];
+            break;
+        case TOK_CALL:
+            const char *result_type = get_result_type_name(node);
+            if(strchr(result_type, '*'))
+                cat = rcategory[PTR];
+            else if(get_node_attributes(node).test(ATTR_int))
+                cat = rcategory[INT];
+            else if(get_node_attributes(node).test(ATTR_char))
+                cat = rcategory[CHAR];
+            else if(get_node_attributes(node).test(ATTR_bool))
+                cat = rcategory[BOOL];
+            else
+                assert(0);
+            break;
+    }
+    return cat;
 }
 
 string *mangle_name(astree *node)
@@ -127,7 +171,7 @@ void emit_recursive(astree *node)
         case '/': case '%': case '<':
         case TOK_EQ: case TOK_NE: case TOK_LE:
         case TOK_GE: 
-            node->oilname = register_alloc("i");
+            node->oilname = register_alloc(register_category(node));
             fprintf(oilfile, INDENT "%s %s = %s %s %s;\n",
                     get_result_type_name(node),
                     node->oilname->c_str(), 
@@ -138,7 +182,7 @@ void emit_recursive(astree *node)
             break;
         case TOK_POS: case TOK_NEG: case '!':
         case TOK_ORD: case TOK_CHR:
-            node->oilname = register_alloc("i");
+            node->oilname = register_alloc(register_category(node));
             if(node->symbol == TOK_ORD)
                 sym = "(int)";
             else if(node->symbol == TOK_CHR)
@@ -171,7 +215,7 @@ void emit_recursive(astree *node)
             break;
         case TOK_CALL: /* TODO: void */
             if(!get_node_attributes(node).test(ATTR_void)) {
-                node->oilname = register_alloc("i");
+                node->oilname = register_alloc(register_category(node));
                 fprintf(oilfile, INDENT "%s %s = ",
                         get_result_type_name(node),
                         node->oilname->c_str());
@@ -201,7 +245,7 @@ void emit_recursive(astree *node)
             node->oilname = new string(*node->children[0]->oilname + string("* ") + *node->children[1]->oilname);
             break;
         case TOK_INDEX:
-            reg = register_alloc("i");
+            reg = register_alloc("a");
             fprintf(oilfile, INDENT "%s %s = &%s[%s];\n",
                     get_result_type_name(node->children[0]),
                     reg->c_str(),
@@ -210,7 +254,7 @@ void emit_recursive(astree *node)
             node->oilname = new string(string("(*") + *reg + string(")")); /* TODO: parenthesis? maybe look at lval? */
             break;
         case '.':
-            reg = register_alloc("i");
+            reg = register_alloc("a");
             fprintf(oilfile, INDENT "%s %s = &%s->%s;\n",
                     get_result_type_name(node),
                     reg->c_str(), node->children[0]->oilname->c_str(),

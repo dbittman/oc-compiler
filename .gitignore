@@ -7,7 +7,6 @@ yylex.cpp
 yyparse.cpp
 yyparse.h
 *.output
-*.oh
 *.tok
 *.ast
 

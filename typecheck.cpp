@@ -146,8 +146,6 @@ attr_bitset get_node_attributes(astree *node)
 int attr_check_required(astree *node, attr_bitset required)
 {
     /* check if node_attr has all the bits set by 'required' as well. */
-    if(!get_node_attributes(node).any())
-        return 0;
     for(int i=0;i<ATTR_bitset_size;i++) {
         if(required.test(i) && !get_node_attributes(node).test(i)) {
             fprintf(stderr,
@@ -182,8 +180,6 @@ int attr_check_notallowed(astree *node, attr_bitset notallowed)
 int attr_check_any(astree *node, attr_bitset sets)
 {
     /* check if node_attr has at least one of the bits set by 'sets' */
-    if(!get_node_attributes(node).any())
-        return 0;
     for(int i=0;i<ATTR_bitset_size;i++) {
         if(sets.test(i) && get_node_attributes(node).test(i)) {
             return 1;

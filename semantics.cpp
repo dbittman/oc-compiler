@@ -79,6 +79,7 @@ int handle_structure(astree *node)
             symbolize_declaration(field_table,
                     node->children[child],
                     attr_bitset(1 << ATTR_field));
+        sym->type_name = node->children[0]->lexinfo;
         sym->block_nr = 0;
     }
     print_depth--;
@@ -217,10 +218,11 @@ int dfs_traverse(astree *node)
             }
             break;
         case TOK_NEWARRAY:
-            process_node(node->children[1]);
-            /* fall through */
-        case TOK_NEWSTRING:
+            dfs_traverse(node->children[1]);
             process_node(node->children[0]);
+            break;
+        case TOK_NEWSTRING:
+            dfs_traverse(node->children[0]);
             break;
         case '.':
             /* look up everything */

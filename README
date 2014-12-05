@@ -1,39 +1,6 @@
 Daniel Bittman (dbittman)
 
-This is an implementation of assignment 4.
-
-The assignment (and some people on the mailing list) claim that
-only expressions (and a few select other things) should have
-attributes. For the most part, I agree. My assignment does assign
-attributes to a few other tree nodes in order to make the
-typechecking easier. For example:
-int x = 4;
-becomes
-VARDECL
-    INT
-        x
-    4
-
-I'm not sure if my interpretation of the assignment disallows this,
-or suggests otherwise, but my implementation assigns attributes:
-VARDECL
-    INT variable lval int
-        x variable lval int
-    4
-This makes the typechecking for VARDECL much much easier. And I don't
-believe that it is ever stated that this is incorrect or not allowed.
-It may be required, in which case, that's great!
-
-See typecheck.cpp:121 for an explination of the typecheck code.
-
-Prototypes are printed to the sym file as functions would be, but
-minus the function block. It is not stated anywhere in the assignment
-whether prototypes should be excluded from the .sym file or not. I
-feel this is reasonable because it must be entered into the global
-symbol table in order to compare with a function later, so...
-
-One final note is that repeated prototypes ARE NOT processed. So no
-attributes will be assigned to prototypes that repeat!
+This is an implementation of assignment 5.
 
 No parter for this project.
 

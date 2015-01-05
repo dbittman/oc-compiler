@@ -1,6 +1,10 @@
-Daniel Bittman (dbittman)
+oc-compiler
+===========
+OC is a simplified C and Java like language specified by the CMPS104a course at UC Santa Cruz. This compiler was
+written during Fall of 2014, and recieved high marks.
 
-This is an implementation of assignment 5.
+It compiles to a very limited form of C (I'm gonna change that - it's kinda bullshit to compile from C to C), only
+allowing gotos and labels, structs and single assembly-like statements. It performs symbol and type checking, and
+properly builds an abtract syntax tree. It performs no optimizations, as the course did not require them.
 
-No parter for this project.
-
+It uses flex for scanning and bison for parsing, and it written in C++.

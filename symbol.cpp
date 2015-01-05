@@ -126,6 +126,7 @@ int typeid_table_field_select(astree *node)
         return 1;
     }
     node->symentry = field;
+    node->type_name = field->type_name;
     node->children[1]->symentry = field;
     node->children[1]->type_name = field->type_name;
     return 0;

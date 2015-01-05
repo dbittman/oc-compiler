@@ -2,5 +2,8 @@ Daniel Bittman (dbittman)
 
 This is an implementation of assignment 5.
 
+String constants are, during parse-time, gathered into a vector
+of string*, and are printed out at the beginning of the oil file.
+
 No parter for this project.
 

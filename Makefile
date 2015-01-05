@@ -63,7 +63,7 @@ checks:
 
 submit:
 	$(MAKE) checks
-	submit cmps104a-wm.f14 asg4 ${SUBMITS}
+	submit cmps104a-wm.f14 asg5 ${SUBMITS}
 	mkdir -p sub
 	cp ${SUBMITS} sub/
 

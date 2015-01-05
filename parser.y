@@ -150,7 +150,8 @@ variable : TOK_IDENT
          ;
 
 constant : TOK_INTCON               { $$ = $1; }
-         | TOK_STRINGCON            { $$ = $1; emitter_register_string($1); }
+         | TOK_STRINGCON            
+                { $$ = $1; emitter_register_string($1); }
          | TOK_CHARCON              { $$ = $1; }
          | TOK_TRUE                 { $$ = $1; }
          | TOK_FALSE                { $$ = $1; }

@@ -72,6 +72,7 @@ int handle_structure(astree *node)
     print_depth++;
 
     symbol_table *field_table = new symbol_table();
+    sym->fields = field_table;
 
     for(size_t child = 1; child < node->children.size(); ++child) {
         /* add each field to the field_table */
@@ -79,12 +80,10 @@ int handle_structure(astree *node)
             symbolize_declaration(field_table,
                     node->children[child],
                     attr_bitset(1 << ATTR_field));
-        sym->type_name = node->children[0]->lexinfo;
         sym->block_nr = 0;
     }
     print_depth--;
     current_structure = 0;
-    sym->fields = field_table;
     fprintf(symfile, "\n");
     return 0;
 }
@@ -227,7 +226,7 @@ int dfs_traverse(astree *node)
         case '.':
             /* look up everything */
             dfs_traverse(node->children[0]);
-            process_node(node->children[1]);
+            dfs_traverse(node->children[1]);
             typeid_table_field_select(node);
             break;
         default:
